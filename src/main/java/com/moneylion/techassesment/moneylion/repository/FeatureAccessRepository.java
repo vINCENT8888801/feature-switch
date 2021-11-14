@@ -9,10 +9,10 @@ import com.moneylion.techassesment.moneylion.entity.FeatureAccess;
 public interface FeatureAccessRepository extends JpaRepository<FeatureAccess, Long>{
 
 	@Query("SELECT fa FROM FeatureAccess fa "
-			+ "INNER JOIN User u ON fa.id.userId = u.id "
-			+ "INNER JOIN Feature f ON fa.id.featureId = u.id "
-			+ "WHERE u.email = (:email)"
-			+ "AND f.name =(:featureName)")
+			+ "JOIN User u ON fa.id.userId = u.id "
+			+ "JOIN Feature f ON fa.id.featureId = f.id "
+			+ "WHERE u.email = :email "
+			+ "and f.name = :featureName")
 	FeatureAccess findByUserEmailAndFeatureName(@Param("email")String email,@Param("featureName")String featureName);
 
 }

@@ -5,8 +5,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -33,7 +31,7 @@ import com.moneylion.techassesment.moneylion.repository.UserRepository;
 @AutoConfigureMockMvc
 @TestPropertySource(locations = "classpath:application-integrationtest.properties")
 @AutoConfigureTestDatabase
-class MoneyLionTechAssesmentApplicationTests {
+class FeatureControllerTests {
 
 	@Autowired
 	private MockMvc mvc;
@@ -47,16 +45,12 @@ class MoneyLionTechAssesmentApplicationTests {
 	@Autowired
 	private FeatureAccessRepository featureAccessRepository;
 
-	@Before
-	public void setupDb() {
-		
-	}
 
 	@AfterEach
 	public void resetDb() {
 		featureAccessRepository.deleteAll();
 		userRepository.deleteAll();
-		featureRepository.deleteAll(); 
+		featureRepository.deleteAll();
 	}
 
 	@Test
@@ -99,6 +93,8 @@ class MoneyLionTechAssesmentApplicationTests {
 
 	@Test
 	public void givenInexistingFeatureNameShallReturn404() throws Exception {
+		User existingUser = new User("test@email.com");
+		userRepository.save(existingUser);
 
 		mvc.perform(MockMvcRequestBuilders
 				.get("/feature?email={email}&featureName={featureName}", "test@email.com", "featureNotExist")
@@ -122,7 +118,7 @@ class MoneyLionTechAssesmentApplicationTests {
 		mvc.perform(MockMvcRequestBuilders.post("/feature").contentType(MediaType.APPLICATION_JSON)
 				.content(JsonUtil.toJson(request))).andExpect(status().isOk());
 	}
-	
+
 	@Test
 	public void post_validRequestThatDoesNotRequireUpdate_shallReturn304() throws Exception {
 		User existingUser = new User("test3@email.com");
@@ -138,8 +134,23 @@ class MoneyLionTechAssesmentApplicationTests {
 		request.setFeatureName(existingFeature.getName());
 
 		mvc.perform(MockMvcRequestBuilders.post("/feature").contentType(MediaType.APPLICATION_JSON)
+				.content(JsonUtil.toJson(request))).andExpect(status().isNotModified());
+	}
+	
+	@Test
+	public void post_validRequestFeatureAccessNotExisting_shallReturn200() throws Exception {
+		User existingUser = new User("test3@email.com");
+		userRepository.save(existingUser);
+		Feature existingFeature = new Feature("testFeature3");
+		featureRepository.save(existingFeature);
+
+		UpdateUserFeatureAccessRequest request = new UpdateUserFeatureAccessRequest();
+		request.setEmail(existingUser.getEmail());
+		request.setEnable(false);
+		request.setFeatureName(existingFeature.getName());
+
+		mvc.perform(MockMvcRequestBuilders.post("/feature").contentType(MediaType.APPLICATION_JSON)
 				.content(JsonUtil.toJson(request))).andExpect(status().isOk());
 	}
-
 
 }
